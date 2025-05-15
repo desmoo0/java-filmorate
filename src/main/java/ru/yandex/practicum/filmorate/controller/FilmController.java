@@ -26,7 +26,6 @@ public class FilmController {
                 .anyMatch(existingFilm -> existingFilm.getName().equalsIgnoreCase(film.getName()))) {
             throw new ExistingMovieException("Фильм с таким названием уже существует.");
         }
-        film.validate(); // проверка на дату выпуска
         films.put(film.getId(), film);
         return film;
     }
@@ -36,7 +35,6 @@ public class FilmController {
         if (!films.containsKey(film.getId())) {
             throw new ExistingMovieException("Фильм с указанным ID не найден.");
         }
-        film.validate(); // проверка даты
         films.put(film.getId(), film);
         return film;
     }

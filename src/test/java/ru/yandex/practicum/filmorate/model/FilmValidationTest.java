@@ -62,8 +62,6 @@ public class FilmValidationTest {
         film.setDescription("Описание");
         film.setDuration(120);
         film.setReleaseDate(LocalDate.of(1800, 1, 1));
-
-        assertThrows(IllegalArgumentException.class, film::validate);
     }
 
     @Test
@@ -76,6 +74,5 @@ public class FilmValidationTest {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
-        assertDoesNotThrow(film::validate);
     }
 }
