@@ -23,7 +23,7 @@ class FilmServiceTest {
         InMemoryUserStorage userStorage = new InMemoryUserStorage();
         InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
 
-        userService = new UserService(userStorage);
+        userService = new UserService(userStorage, filmStorage);
         filmService = new FilmService(filmStorage, userService);
     }
 

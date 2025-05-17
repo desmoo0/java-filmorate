@@ -13,4 +13,6 @@ public interface FilmStorage {
     List<Film> findAll();
 
     Optional<Film> findById(Long id);
+
+    boolean containsKey(Long id);
 }

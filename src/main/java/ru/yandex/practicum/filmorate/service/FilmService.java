@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ExistingMovieException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -38,10 +39,23 @@ public class FilmService {
     }
 
     public Film create(Film film) {
+        if (film.getId() != null && filmStorage.findAll().stream()
+                .anyMatch(f -> f.getId().equals(film.getId()))) {
+            throw new ExistingMovieException("Фильм с таким ID уже существует.");
+        }
+
+        if (filmStorage.findAll().stream()
+                .anyMatch(f -> f.getName().equalsIgnoreCase(film.getName()))) {
+            throw new ExistingMovieException("Фильм с таким названием уже существует.");
+        }
+
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
+        if (!filmStorage.containsKey(film.getId())) {
+            throw new NoSuchElementException("Фильм с указанным ID не найден.");
+        }
         return filmStorage.update(film);
     }
 

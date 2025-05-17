@@ -13,4 +13,6 @@ public interface UserStorage {
     List<User> findAll();
 
     Optional<User> findById(Long id);
+
+    boolean containsKey(Long id);
 }

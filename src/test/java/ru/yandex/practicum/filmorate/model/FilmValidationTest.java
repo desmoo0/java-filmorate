@@ -1,12 +1,11 @@
+
 package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import jakarta.validation.*;
 import java.time.LocalDate;
 import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FilmValidationTest {
@@ -35,7 +34,7 @@ public class FilmValidationTest {
     void shouldFailValidationWhenDescriptionTooLong() {
         Film film = new Film();
         film.setName("Название");
-        film.setDescription("a".repeat(201)); // > 200
+        film.setDescription("a".repeat(201));
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
 
@@ -56,12 +55,15 @@ public class FilmValidationTest {
     }
 
     @Test
-    void shouldThrowWhenReleaseDateBefore1895() {
+    void shouldFailValidationWhenReleaseDateBefore1895() {
         Film film = new Film();
         film.setName("Название");
         film.setDescription("Описание");
         film.setDuration(120);
         film.setReleaseDate(LocalDate.of(1800, 1, 1));
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 
     @Test

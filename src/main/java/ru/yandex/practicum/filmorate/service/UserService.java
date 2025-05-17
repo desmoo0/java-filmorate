@@ -1,10 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.apache.catalina.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ExistingUserException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -12,7 +17,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(UserStorage userStorage, FilmStorage filmStorage) {
         this.userStorage = userStorage;
     }
 
@@ -56,10 +61,32 @@ public class UserService {
     }
 
     public User create(User user) {
+        if (user.getId() != null && userStorage.containsKey(user.getId())) {
+            throw new ExistingUserException("Пользователь с таким ID уже существует.");
+        }
+
+        if (user.getLogin().contains(" ")) {
+            throw new ExistingUserException("Логин не может содержать пробелы.");
+        }
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ExistingUserException("Дата рождения не может быть в будущем.");
+        }
         return userStorage.create(user);
     }
 
     public User update(User user) {
+        if (user.getId() == null || !userStorage.containsKey(user.getId())) {
+            throw new NoSuchElementException("Пользователь не найден.");
+        }
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         return userStorage.update(user);
     }
 

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ExistingUserException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -15,26 +16,10 @@ import java.util.*;
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    private long currentId = 1;
+    private long currentId = 1L;
 
     @Override
     public User create(User user) {
-        if (user.getId() != null && users.containsKey(user.getId())) {
-            throw new ExistingUserException("Пользователь с таким ID уже существует.");
-        }
-
-        if (user.getLogin().contains(" ")) {
-            throw new ExistingUserException("Логин не может содержать пробелы.");
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ExistingUserException("Дата рождения не может быть в будущем.");
-        }
-
         user.setId(currentId++);
         users.put(user.getId(), user);
         return user;
@@ -42,14 +27,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (user.getId() == null || !users.containsKey(user.getId())) {
-            throw new NoSuchElementException("Пользователь не найден.");
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
         users.put(user.getId(), user);
         return user;
     }
@@ -63,4 +40,11 @@ public class InMemoryUserStorage implements UserStorage {
     public Optional<User> findById(Long id) {
         return Optional.ofNullable(users.get(id));
     }
+
+    @Override
+    public boolean containsKey(Long id) {
+        return users.containsKey(id);
+    }
+
+
 }
