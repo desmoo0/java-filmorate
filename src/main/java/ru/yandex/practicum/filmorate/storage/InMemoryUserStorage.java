@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import lombok.Getter;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.ExistingUserException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
@@ -10,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Component
