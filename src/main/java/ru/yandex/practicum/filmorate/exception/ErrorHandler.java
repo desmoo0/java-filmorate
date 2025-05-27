@@ -19,18 +19,10 @@ public class ErrorHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ValidationErrorResponse handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(err ->
-                errors.put(err.getField(), err.getDefaultMessage())
-        );
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
         log.warn("Ошибка валидации: {}", errors);
         return new ValidationErrorResponse("Ошибка валидации", errors);
-    }
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NoSuchElementException.class)
-    public ErrorResponse handleNotFound(NoSuchElementException ex) {
-        log.warn("Ресурс не найден: {}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -38,6 +30,13 @@ public class ErrorHandler {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .body(new ErrorResponse(ex.getReason()));
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NoSuchElementException.class)
+    public ErrorResponse handleNotFound(NoSuchElementException ex) {
+        log.warn("Ресурс не найден: {}", ex.getMessage());
+        return new ErrorResponse(ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
