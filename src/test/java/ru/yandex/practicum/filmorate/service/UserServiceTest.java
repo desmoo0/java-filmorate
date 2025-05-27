@@ -38,7 +38,9 @@ class UserServiceTest {
         userService.removeFriend(user1.getId(), user2.getId());
         assertTrue(userService.getFriends(user1.getId()).isEmpty());
         assertTrue(userService.getFriends(user2.getId()).isEmpty());
-    }@Test
+    }
+
+    @Test
     void shouldGetCommonFriends() {
         User user1 = userService.create(makeUser("a@mail.com", "a"));
         User user2 = userService.create(makeUser("b@mail.com", "b"));
