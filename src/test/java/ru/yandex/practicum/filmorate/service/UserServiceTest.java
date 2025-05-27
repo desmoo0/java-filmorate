@@ -26,29 +26,33 @@ class UserServiceTest {
         User user1 = userService.create(makeUser("first@mail.com", "first"));
         User user2 = userService.create(makeUser("second@mail.com", "second"));
 
+        // отправить запрос на дружбу и попытка подтверждения
         userService.addFriend(user1.getId(), user2.getId());
         userService.addFriend(user2.getId(), user1.getId());
 
+        // в текущей реализации дружба не устанавливается
         assertTrue(userService.getFriends(user1.getId()).isEmpty());
         assertTrue(userService.getFriends(user2.getId()).isEmpty());
 
+        // удалить дружбу не изменяет состояние
         userService.removeFriend(user1.getId(), user2.getId());
         assertTrue(userService.getFriends(user1.getId()).isEmpty());
         assertTrue(userService.getFriends(user2.getId()).isEmpty());
-    }
-
-    @Test
+    }@Test
     void shouldGetCommonFriends() {
         User user1 = userService.create(makeUser("a@mail.com", "a"));
         User user2 = userService.create(makeUser("b@mail.com", "b"));
         User common = userService.create(makeUser("c@mail.com", "c"));
 
+        // сделать user1->common и common->user1
         userService.addFriend(user1.getId(), common.getId());
         userService.addFriend(common.getId(), user1.getId());
 
+        // сделать user2->common и common->user2
         userService.addFriend(user2.getId(), common.getId());
         userService.addFriend(common.getId(), user2.getId());
 
+        // только user1 видит common, user2 видит common => общие друзья по реализации = []
         List<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
         assertTrue(commonFriends.isEmpty());
     }
