@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.validation.*;
+import ru.yandex.practicum.filmorate.model.user.User;
+
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -15,8 +17,9 @@ public class UserValidationTest {
 
     @BeforeEach
     public void setup() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
     }
 
     @Test

@@ -2,14 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.film.Film;
+import ru.yandex.practicum.filmorate.model.film.Genre;
+import ru.yandex.practicum.filmorate.model.film.MpaRating;
+import ru.yandex.practicum.filmorate.model.user.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFriendStorage;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,9 +25,10 @@ class FilmServiceTest {
     @BeforeEach
     void setup() {
         InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        InMemoryFriendStorage friendStorage = new InMemoryFriendStorage();
         InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
 
-        userService = new UserService(userStorage, filmStorage);
+        userService = new UserService(userStorage, friendStorage);
         filmService = new FilmService(filmStorage, userService);
     }
 
@@ -61,7 +66,7 @@ class FilmServiceTest {
         Film film = filmService.create(makeFilm("Unknown User Like"));
 
         NoSuchElementException ex = assertThrows(NoSuchElementException.class, () ->
-                filmService.addLike(film.getId(), 999L));
+                filmService.addLike(film.getId(), Long.valueOf(999L)));
         assertTrue(ex.getMessage().contains("не найден"));
     }
 
@@ -71,6 +76,8 @@ class FilmServiceTest {
         film.setDescription("Описание");
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
+        film.setGenres(Set.of(Genre.COMEDY));
+        film.setMpaRating(MpaRating.G);
         return film;
     }
 

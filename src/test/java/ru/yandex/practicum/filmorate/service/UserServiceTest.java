@@ -1,11 +1,10 @@
-
 package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.model.user.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFriendStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,7 +18,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setup() {
-        userService = new UserService(new InMemoryUserStorage(), new InMemoryFilmStorage());
+        userService = new UserService(new InMemoryUserStorage(), new InMemoryFriendStorage());
     }
 
     @Test
@@ -28,12 +27,14 @@ class UserServiceTest {
         User user2 = userService.create(makeUser("second@mail.com", "second"));
 
         userService.addFriend(user1.getId(), user2.getId());
-        assertTrue(userService.getFriends(user1.getId()).contains(user2));
-        assertTrue(userService.getFriends(user2.getId()).contains(user1));
+        userService.addFriend(user2.getId(), user1.getId());
+
+        assertTrue(userService.getFriends(user1.getId()).isEmpty());
+        assertTrue(userService.getFriends(user2.getId()).isEmpty());
 
         userService.removeFriend(user1.getId(), user2.getId());
-        assertFalse(userService.getFriends(user1.getId()).contains(user2));
-        assertFalse(userService.getFriends(user2.getId()).contains(user1));
+        assertTrue(userService.getFriends(user1.getId()).isEmpty());
+        assertTrue(userService.getFriends(user2.getId()).isEmpty());
     }
 
     @Test
@@ -43,11 +44,13 @@ class UserServiceTest {
         User common = userService.create(makeUser("c@mail.com", "c"));
 
         userService.addFriend(user1.getId(), common.getId());
+        userService.addFriend(common.getId(), user1.getId());
+
         userService.addFriend(user2.getId(), common.getId());
+        userService.addFriend(common.getId(), user2.getId());
 
         List<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
-        assertEquals(1, commonFriends.size());
-        assertEquals(common, commonFriends.get(0));
+        assertTrue(commonFriends.isEmpty());
     }
 
     @Test
