@@ -35,6 +35,22 @@ public class Film {
     private Set<Genre> genres = new HashSet<>();
 
     @NotNull(message = "Укажите рейтинг МРА")
-    private MpaRating mpaRating;
+    private Mpa mpa;
 
+    public MpaRating getMpaRating() {
+        if (mpa == null) {
+            return null;
+        }
+        return MpaRating.fromId(mpa.getId());
+    }
+
+    public void setMpaRating(MpaRating rating) {
+        if (rating == null) {
+            this.mpa = null;
+        } else {
+            Mpa m = new Mpa(rating.getId());
+            m.setName(rating.getName());
+            this.mpa = m;
+        }
+    }
 }

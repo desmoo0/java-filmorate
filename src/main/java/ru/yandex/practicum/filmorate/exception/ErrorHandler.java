@@ -2,8 +2,10 @@ package ru.yandex.practicum.filmorate.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,10 +47,10 @@ public class ErrorHandler {
         return new ErrorResponse(ex.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(Exception.class)
-    public ErrorResponse handleAny(Exception ex) {
-        log.error("Необработанная ошибка: {}", ex.getMessage(), ex);
-        return new ErrorResponse("Внутренняя ошибка сервера: " + ex.getMessage());
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(new ErrorResponse(ex.getReason()));
     }
 }

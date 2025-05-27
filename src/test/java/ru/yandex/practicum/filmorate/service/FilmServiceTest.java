@@ -6,9 +6,7 @@ import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 import ru.yandex.practicum.filmorate.model.user.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFriendStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,13 +22,21 @@ class FilmServiceTest {
 
     @BeforeEach
     void setup() {
-        var userStorage = new InMemoryUserStorage();
+        var userStorage   = new InMemoryUserStorage();
         var friendStorage = new InMemoryFriendStorage();
-        var filmStorage = new InMemoryFilmStorage();
+        var filmStorage   = new InMemoryFilmStorage();
+        var genreStorage  = new InMemoryGenreStorage();
+        var mpaStorage    = new InMemoryMpaStorage();
 
         this.userService = new UserService(userStorage, friendStorage);
-        this.filmService = new FilmService(filmStorage, userService);
+        this.filmService = new FilmService(
+                filmStorage,
+                userService,
+                genreStorage,
+                mpaStorage
+        );
     }
+
 
     @Test
     void shouldCreateFilmAssignId() {
