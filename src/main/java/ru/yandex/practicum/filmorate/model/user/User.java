@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model.user;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -13,6 +14,7 @@ public class User {
 
     @NotBlank(message = "Емайл пользователя не может быть пустым")
     @NotNull(message = "Емайл пользователя не может быть пустым")
+    @Email(message = "Некорректный формат e-mail")
     private String email;
 
     @NotBlank(message = "Логин пользователя не может быть пустым")

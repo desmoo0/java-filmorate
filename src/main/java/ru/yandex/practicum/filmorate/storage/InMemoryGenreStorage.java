@@ -25,6 +25,8 @@ public class InMemoryGenreStorage implements GenreStorage {
 
     @Override
     public Optional<Genre> getById(int id) {
-        return Optional.ofNullable(genres.get(Optional.of(id)));
+        return Optional.ofNullable(genres.get(id));
     }
+
+
 }

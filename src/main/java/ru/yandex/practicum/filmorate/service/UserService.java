@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ExistingUserException;
-import ru.yandex.practicum.filmorate.model.friend.Friendship;
 import ru.yandex.practicum.filmorate.model.user.User;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -63,22 +62,21 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
+        findById(userId);
+        findById(friendId);
 
-        List<Friendship> incoming = friendStorage.getFriendRequests(userId);
-        boolean hasRequest = false;
-        for (Friendship req : incoming) {
-            if (req.getUserId() == friendId && req.getFriendId() == userId) {
-                hasRequest = true;
-                break;
-            }
-        }
+        // проверяем, есть ли входящий запрос от friendId к userId
+        boolean hasRequest = friendStorage.getFriendRequests(userId).stream()
+                .anyMatch(r -> r.getUserId() == friendId && r.getFriendId() == userId);
 
         if (hasRequest) {
+            // подтверждаем первоначальный запрос
             friendStorage.confirmFriend(friendId, userId);
+            // создаём зеркальную запись и сразу подтверждаем её
+            friendStorage.addFriend(userId, friendId);
             friendStorage.confirmFriend(userId, friendId);
         } else {
+            // создаём новый запрос на дружбу
             friendStorage.addFriend(userId, friendId);
         }
     }

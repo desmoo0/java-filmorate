@@ -137,4 +137,31 @@ class FilmServiceTest {
         user.setBirthday(LocalDate.of(2000, 1, 1));
         return user;
     }
+
+    @Test
+    void shouldThrowOnUpdateNonexistentFilm() {
+        Film f = makeFilm("Нет");
+        f.setId(999L);
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class,
+                () -> filmService.update(f));
+        assertTrue(ex.getMessage().contains("не найден"));
+    }
+
+    @Test
+    void shouldNotDuplicateLike() {
+        Film film = filmService.create(makeFilm("Тест"));
+        User user = userService.create(makeUser("a@mail.com","u"));
+        filmService.addLike(film.getId(), user.getId());
+        filmService.addLike(film.getId(), user.getId()); // второй раз
+        Film got = filmService.getById(film.getId());
+        assertEquals(1, got.getLikes().size());
+    }
+
+    @Test
+    void shouldNotFailOnRemoveLikeFromNonexistentFilm() {
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class,
+                () -> filmService.removeLike(999L, 1L));
+        assertTrue(ex.getMessage().contains("не найден"));
+    }
+
 }

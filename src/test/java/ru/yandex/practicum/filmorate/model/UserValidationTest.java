@@ -66,4 +66,19 @@ public class UserValidationTest {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
+
+    @Test
+    void shouldFailValidationWhenEmailFormatInvalid() {
+        User user = new User();
+        user.setEmail("not-an-email");
+        user.setLogin("login");
+        user.setBirthday(LocalDate.of(2000,1,1));
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("формат e-mail")));
+    }
+
+
 }

@@ -23,15 +23,21 @@ public class FilmValidationTest {
         }
     }
 
-    @Test
-    void shouldFailValidationWhenNameIsBlank() {
+    private Film makeValidFilm() {
         Film film = new Film();
-        film.setName("   ");
+        film.setName("Название");
         film.setDescription("Описание");
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setGenres(Set.of(Genre.COMEDY));
         film.setMpaRating(MpaRating.G);
+        return film;
+    }
+
+    @Test
+    void shouldFailValidationWhenNameIsBlank() {
+        Film film = makeValidFilm();
+        film.setName("   ");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
@@ -39,13 +45,8 @@ public class FilmValidationTest {
 
     @Test
     void shouldFailValidationWhenDescriptionTooLong() {
-        Film film = new Film();
-        film.setName("Название");
+        Film film = makeValidFilm();
         film.setDescription("a".repeat(201));
-        film.setDuration(100);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setGenres(Set.of(Genre.COMEDY));
-        film.setMpaRating(MpaRating.G);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
@@ -53,13 +54,8 @@ public class FilmValidationTest {
 
     @Test
     void shouldFailValidationWhenDurationIsNegative() {
-        Film film = new Film();
-        film.setName("Название");
-        film.setDescription("Описание");
+        Film film = makeValidFilm();
         film.setDuration(-90);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setGenres(Set.of(Genre.COMEDY));
-        film.setMpaRating(MpaRating.G);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
@@ -67,13 +63,26 @@ public class FilmValidationTest {
 
     @Test
     void shouldFailValidationWhenReleaseDateBefore1895() {
-        Film film = new Film();
-        film.setName("Название");
-        film.setDescription("Описание");
-        film.setDuration(120);
+        Film film = makeValidFilm();
         film.setReleaseDate(LocalDate.of(1800, 1, 1));
-        film.setGenres(Set.of(Genre.COMEDY));
-        film.setMpaRating(MpaRating.G);
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shouldFailValidationWhenGenresEmpty() {
+        Film film = makeValidFilm();
+        film.setGenres(Set.of());
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shouldFailValidationWhenMpaRatingNull() {
+        Film film = makeValidFilm();
+        film.setMpaRating(null);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
@@ -81,7 +90,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldPassValidationWithCorrectFilm() {
-        Film film = new Film();
+        Film film = makeValidFilm();
         film.setName("Тест");
         film.setDescription("Описание");
         film.setDuration(90);

@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 
+@Getter
 public enum MpaRating {
     G(1, "G"),
     PG(2, "PG"),
@@ -16,14 +18,6 @@ public enum MpaRating {
     MpaRating(int id, String name) {
         this.id = id;
         this.name = name;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @JsonCreator

@@ -22,8 +22,10 @@ public class InMemoryMpaStorage {
     }
 
     public Mpa findById(int id) {
-        Mpa m = ratings.get(Optional.of(id));
-        if (m == null) throw new NoSuchElementException("Mpa with id=" + id + " not found");
+        Mpa m = ratings.get(id);
+        if (m == null) {
+            throw new NoSuchElementException("Mpa with id=" + id + " not found");
+        }
         return m;
     }
 }
