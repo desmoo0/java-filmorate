@@ -7,8 +7,8 @@ import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 import ru.yandex.practicum.filmorate.model.user.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFriendStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFriendStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,12 +24,56 @@ class FilmServiceTest {
 
     @BeforeEach
     void setup() {
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
-        InMemoryFriendStorage friendStorage = new InMemoryFriendStorage();
-        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        var userStorage = new InMemoryUserStorage();
+        var friendStorage = new InMemoryFriendStorage();
+        var filmStorage = new InMemoryFilmStorage();
 
-        userService = new UserService(userStorage, friendStorage);
-        filmService = new FilmService(filmStorage, userService);
+        this.userService = new UserService(userStorage, friendStorage);
+        this.filmService = new FilmService(filmStorage, userService);
+    }
+
+    @Test
+    void shouldCreateFilmAssignId() {
+        Film film = makeFilm("Интерстеллар");
+        Film created = filmService.create(film);
+
+        assertNotNull(created.getId(), "ID должен быть присвоен");
+        assertEquals("Интерстеллар", created.getName());
+        assertEquals("Описание", created.getDescription());
+        assertEquals(LocalDate.of(2020, 1, 1), created.getReleaseDate());
+        assertEquals(100, created.getDuration());
+        assertEquals(Set.of(Genre.COMEDY), created.getGenres());
+        assertEquals(MpaRating.G, created.getMpaRating());
+    }
+
+    @Test
+    void shouldUpdateFilmDetails() {
+        Film f = filmService.create(makeFilm("Первое название"));
+        f.setName("Новое название");
+        f.setDescription("Новое описание");
+        Film updated = filmService.update(f);
+
+        assertEquals(f.getId(), updated.getId());
+        assertEquals("Новое название", updated.getName());
+        assertEquals("Новое описание", updated.getDescription());
+    }
+
+    @Test
+    void shouldGetAllFilms() {
+        filmService.create(makeFilm("Фильм 1"));
+        filmService.create(makeFilm("Фильм 2"));
+        List<Film> all = filmService.getAll();
+
+        assertEquals(2, all.size());
+        assertTrue(all.stream().anyMatch(f -> f.getName().equals("Фильм 1")));
+        assertTrue(all.stream().anyMatch(f -> f.getName().equals("Фильм 2")));
+    }
+
+    @Test
+    void shouldThrowWhenFilmNotFoundOnGet() {
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class,
+                () -> filmService.getById(999L));
+        assertTrue(ex.getMessage().contains("не найден"));
     }
 
     @Test
@@ -39,79 +83,42 @@ class FilmServiceTest {
 
         filmService.addLike(film.getId(), user.getId());
         Film withLike = filmService.getById(film.getId());
-        assertTrue(withLike.getLikes().contains(user.getId()), "Like should be recorded");
+        assertTrue(withLike.getLikes().contains(user.getId()), "Лайк должен сохраниться");
 
         filmService.removeLike(film.getId(), user.getId());
         Film withoutLike = filmService.getById(film.getId());
-        assertFalse(withoutLike.getLikes().contains(user.getId()), "Like should be removed");
-    }
-
-    @Test
-    void shouldThrowWhenUserNotFound() {
-        Film film = filmService.create(makeFilm("Unknown User Like"));
-
-        NoSuchElementException ex = assertThrows(NoSuchElementException.class, () ->
-                filmService.addLike(film.getId(), 999L));
-        assertTrue(ex.getMessage().contains("не найден"));
-    }
-
-    @Test
-    void shouldCreateFilmWithValidData() {
-        Film created = filmService.create(makeFilm("Интерстеллар"));
-        assertNotNull(created.getId());
-        assertEquals("Интерстеллар", created.getName());
-        assertEquals(100, created.getDuration());
-        assertEquals(LocalDate.of(2020,1,1), created.getReleaseDate());
-        assertEquals(Set.of(Genre.COMEDY), created.getGenres());
-        assertEquals(MpaRating.G, created.getMpaRating());
-    }
-
-    @Test
-    void shouldUpdateExistingFilm() {
-        Film film = filmService.create(makeFilm("Original"));
-        film.setName("Updated");
-        film.setDuration(150);
-        Film updated = filmService.update(film);
-        assertEquals(film.getId(), updated.getId());
-        assertEquals("Updated", updated.getName());
-        assertEquals(150, updated.getDuration());
-    }
-
-    @Test
-    void shouldGetFilmById() {
-        Film film = filmService.create(makeFilm("Avatar"));
-        Film found = filmService.getById(film.getId());
-        assertEquals(film.getId(), found.getId());
-        assertEquals("Avatar", found.getName());
-    }
-
-    @Test
-    void shouldGetAllFilms() {
-        filmService.create(makeFilm("A"));
-        filmService.create(makeFilm("B"));
-        List<Film> all = filmService.getAll();
-        assertEquals(2, all.size());
-        assertTrue(all.stream().map(Film::getName).toList().containsAll(List.of("A","B")));
+        assertFalse(withoutLike.getLikes().contains(user.getId()), "Лайк должен удалиться");
     }
 
     @Test
     void shouldReturnTopFilmsByLikes() {
+        // создаём три фильма
         Film f1 = filmService.create(makeFilm("F1"));
         Film f2 = filmService.create(makeFilm("F2"));
-        User u1 = userService.create(makeUser("u1@mail.ru","u1"));
-        User u2 = userService.create(makeUser("u2@mail.ru","u2"));
+        Film f3 = filmService.create(makeFilm("F3"));
+        // два пользователя
+        User u1 = userService.create(makeUser("u1@mail.com", "u1"));
+        User u2 = userService.create(makeUser("u2@mail.com", "u2"));
 
-        // f1 gets two likes, f2 gets one
+        // f1: 2 лайка, f2: 1 лайк, f3: 0
         filmService.addLike(f1.getId(), u1.getId());
         filmService.addLike(f1.getId(), u2.getId());
         filmService.addLike(f2.getId(), u1.getId());
 
-        List<Film> top1 = filmService.getTopFilms(1);
-        assertEquals(1, top1.size());
-        assertEquals(f1.getId(), top1.get(0).getId());
+        List<Film> top2 = filmService.getTopFilms(2);
+        assertEquals(2, top2.size());
+        assertEquals(f1.getId(), top2.get(0).getId(), "Первым должен идти фильм с двумя лайками");
+        assertEquals(f2.getId(), top2.get(1).getId(), "Вторым — фильм с одним лайком");
     }
 
-    // Вспомогательные методы
+    @Test
+    void shouldThrowWhenUserNotFoundOnLike() {
+        Film film = filmService.create(makeFilm("Нет юзера"));
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class,
+                () -> filmService.addLike(film.getId(), 999L));
+        assertTrue(ex.getMessage().contains("не найден"));
+    }
+
     private Film makeFilm(String name) {
         Film film = new Film();
         film.setName(name);
