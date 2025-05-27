@@ -1,21 +1,43 @@
 package ru.yandex.practicum.filmorate.model.film;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-@Getter
 public enum MpaRating {
-    G("G", "нет ограничений"),
-    PG("PG", "для детей рекомендуется с родителями"),
-    PG_13("PG-13", "до 13 лет не рекомендуется"),
-    R("R", "до 17 лет в присутствии взрослого"),
-    NC_17("NC-17", "до 18 лет просмотр запрещён");
+    G(1, "G"),
+    PG(2, "PG"),
+    PG_13(3, "PG-13"),
+    R(4, "R"),
+    NC_17(5, "NC-17");
 
-    private final String code;
-    private final String description;
+    private final int id;
+    private final String name;
 
-    MpaRating(String code, String description) {
-        this.code = code;
-        this.description = description;
+    MpaRating(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @JsonCreator
+    public static MpaRating fromId(int id) {
+        for (MpaRating r : values()) {
+            if (r.id == id) {
+                return r;
+            }
+        }
+        throw new IllegalArgumentException("Unknown MPA rating id: " + id);
+    }
+
+    @JsonValue
+    public int toValue() {
+        return id;
+    }
 }

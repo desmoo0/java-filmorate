@@ -51,7 +51,7 @@ public class UserService {
     }
 
     public User findById(long id) {
-        Optional<User> opt = userStorage.findById(id);
+        Optional<User> opt = userStorage.findById(Long.valueOf(id));
         if (opt.isEmpty()) {
             throw new NoSuchElementException("Пользователь с id=" + id + " не найден");
         }

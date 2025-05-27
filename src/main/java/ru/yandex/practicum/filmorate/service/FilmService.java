@@ -1,70 +1,61 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ExistingMovieException;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserService userService;
 
-    @Autowired
     public FilmService(FilmStorage filmStorage, UserService userService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
     }
 
-    public void addLike(Long filmId, Long userId) {
-        Film film = findById(filmId);
-        userService.findById(userId);
-        film.getLikes().add(userId);
-    }
-
-    public void removeLike(Long filmId, Long userId) {
-        Film film = findById(filmId);
-        userService.findById(userId);
-        film.getLikes().remove(userId);
-    }
-
-    public List<Film> getTopFilms(int count) {
-        return filmStorage.findAll().stream()
-                .sorted(Comparator.comparingInt(f -> -f.getLikes().size()))
-                .limit(count)
-                .toList();
-    }
-
     public Film create(Film film) {
-        if (film.getId() != null && filmStorage.findAll().stream()
-                .anyMatch(f -> f.getId().equals(film.getId()))) {
-            throw new ExistingMovieException("Фильм с таким ID уже существует.");
-        }
-
-        if (filmStorage.findAll().stream()
-                .anyMatch(f -> f.getName().equalsIgnoreCase(film.getName()))) {
-            throw new ExistingMovieException("Фильм с таким названием уже существует.");
-        }
-
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
-        if (!filmStorage.containsKey(film.getId())) {
-            throw new NoSuchElementException("Фильм с указанным ID не найден.");
+        if (filmStorage.getById(film.getId()).isEmpty()) {
+            throw new NoSuchElementException("Фильм с id=" + film.getId() + " не найден");
         }
         return filmStorage.update(film);
     }
 
-    public List<Film> findAll() {
-        return filmStorage.findAll();
+    public Film getById(long id) {
+        return filmStorage.getById(id)
+                .orElseThrow(() -> new NoSuchElementException("Фильм с id=" + id + " не найден"));
     }
 
-    public Film findById(Long id) {
-        return filmStorage.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Фильм с id=" + id + " не найден"));
+    public List<Film> getAll() {
+        return filmStorage.getAll();
+    }
+
+    public void addLike(long filmId, long userId) {
+        userService.findById(userId);
+        Film film = getById(filmId);
+        film.getLikes().add(userId);
+        filmStorage.update(film);
+    }
+
+    public void removeLike(long filmId, long userId) {
+        userService.findById(userId);
+        Film film = getById(filmId);
+        film.getLikes().remove(userId);
+        filmStorage.update(film);
+    }
+
+    public List<Film> getTopFilms(int count) {
+        return filmStorage.getAll().stream()
+                .sorted((a, b) -> Integer.compare(b.getLikes().size(), a.getLikes().size()))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 }

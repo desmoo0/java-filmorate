@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.Setter;
 import ru.yandex.practicum.filmorate.validator.AfterDate;
 
 import java.time.LocalDate;
@@ -27,7 +28,8 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительной.")
     private int duration;
 
-    private final Set<Long> likes = new HashSet<>();
+    @Setter
+    private Set<Long> likes = new HashSet<>();
 
     @NotEmpty(message = "Укажите хотя бы один жанр")
     private Set<Genre> genres = new HashSet<>();
