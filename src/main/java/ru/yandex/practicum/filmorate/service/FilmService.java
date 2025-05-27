@@ -22,11 +22,14 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final InMemoryMpaStorage mpaStorage;
 
-    public FilmService(FilmStorage fs, UserService us, GenreStorage gs, InMemoryMpaStorage ms) {
-        this.filmStorage = fs;
-        this.userService = us;
-        this.genreStorage = gs;
-        this.mpaStorage = ms;
+    public FilmService(FilmStorage filmStorage,
+                       UserService userService,
+                       GenreStorage genreStorage,
+                       InMemoryMpaStorage mpaStorage) {
+        this.filmStorage = filmStorage;
+        this.userService = userService;
+        this.genreStorage = genreStorage;
+        this.mpaStorage = mpaStorage;
     }
 
     public Film create(Film film) {
@@ -43,16 +46,26 @@ public class FilmService {
     }
 
     private void validateFilm(Film film) {
-        // проверяем MPA
-        Mpa m = mpaStorage.findById(film.getMpa().getId());
-        film.setMpa(m);
-        // проверяем и нормализуем жанры
-        Set<Genre> ok = film.getGenres().stream()
+        try {
+            Mpa mpa = mpaStorage.findById(film.getMpa().getId());
+            film.setMpa(mpa);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "MPA-рейтинг с id=" + film.getMpa().getId() + " не найден"
+            );
+        }
+
+        // Проверка и нормализация жанров
+        Set<Genre> normalized = film.getGenres().stream()
                 .map(g -> genreStorage.getById(g.getId())
                         .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST, "Жанр с id=" + g.getId() + " не найден")))
+                                HttpStatus.BAD_REQUEST,
+                                "Жанр с id=" + g.getId() + " не найден"
+                        ))
+                )
                 .collect(Collectors.toSet());
-        film.setGenres(ok);
+        film.setGenres(normalized);
     }
 
     public Film getById(long id) {

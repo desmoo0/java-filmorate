@@ -21,8 +21,7 @@ public class Friendship {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Friendship)) return false;
-        Friendship that = (Friendship) o;
+        if (!(o instanceof Friendship that)) return false;
         return userId == that.userId
                 && friendId == that.friendId
                 && status == that.status;

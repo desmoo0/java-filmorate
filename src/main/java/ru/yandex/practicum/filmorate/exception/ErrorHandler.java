@@ -33,24 +33,17 @@ public class ErrorHandler {
         return new ErrorResponse(ex.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(ExistingUserException.class)
-    public ErrorResponse handleUserExists(ExistingUserException ex) {
-        log.warn("Пользователь уже существует: {}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(ExistingMovieException.class)
-    public ErrorResponse handleFilmExists(ExistingMovieException ex) {
-        log.warn("Фильм уже существует: {}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
-    }
-
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .body(new ErrorResponse(ex.getReason()));
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public ErrorResponse handleAny(Exception ex) {
+        log.error("Необработанная ошибка: {}", ex.getMessage(), ex);
+        return new ErrorResponse("Внутренняя ошибка сервера: " + ex.getMessage());
     }
 }
