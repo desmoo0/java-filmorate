@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.validation.*;
+import ru.yandex.practicum.filmorate.model.user.User;
+
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -15,8 +17,9 @@ public class UserValidationTest {
 
     @BeforeEach
     public void setup() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
     }
 
     @Test
@@ -63,4 +66,19 @@ public class UserValidationTest {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
+
+    @Test
+    void shouldFailValidationWhenEmailFormatInvalid() {
+        User user = new User();
+        user.setEmail("not-an-email");
+        user.setLogin("login");
+        user.setBirthday(LocalDate.of(2000,1,1));
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("формат e-mail")));
+    }
+
+
 }
