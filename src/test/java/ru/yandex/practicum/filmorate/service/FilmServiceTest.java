@@ -50,18 +50,15 @@ class FilmServiceTest {
     @BeforeEach
     void setUp() {
         testFilm = makeFilm("Test Film");
-        testUser = makeUser("test@mail.com", "test");
-
-        when(userStorage.findById(anyLong())).thenReturn(Optional.of(testUser));
-        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
-        when(genreStorage.findById(1)).thenReturn(Optional.of(new Genre(1, "Комедия")));
-        when(genreStorage.findById(2)).thenReturn(Optional.of(new Genre(2, "Драма")));
-        when(genreStorage.findById(999)).thenReturn(Optional.empty());
+        testUser = makeUser("test@mail.ru", "test");
     }
 
     @Test
     void shouldCreateFilmWithGenres() {
-        when(filmStorage.create(any(Film.class))).thenReturn(testFilm);
+        when(genreStorage.findById(1)).thenReturn(Optional.of(new Genre(1, "Комедия")));
+        when(genreStorage.findById(2)).thenReturn(Optional.of(new Genre(2, "Драма")));
+        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
+        when(filmStorage.create(any(Film.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Set<Genre> genres = new LinkedHashSet<>();
         genres.add(new Genre(1, null));
@@ -72,7 +69,9 @@ class FilmServiceTest {
 
         assertNotNull(created);
         assertEquals(2, created.getGenres().size());
-        assertEquals("Комедия", created.getGenres().iterator().next().getName());
+        assertTrue(created.getGenres().stream().anyMatch(g -> "Комедия".equals(g.getName())));
+        assertTrue(created.getGenres().stream().anyMatch(g -> "Драма".equals(g.getName())));
+
         verify(filmStorage, times(1)).create(testFilm);
     }
 
