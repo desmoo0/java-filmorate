@@ -43,7 +43,6 @@ public class UserDbStorage implements UserStorage {
         return list.isEmpty() ? Optional.empty() : Optional.of(list.getFirst());
     }
 
-    // на случай, если тесты зовут именно findUserById
     public Optional<User> findUserById(long id) {
         return findById(id);
     }
@@ -90,5 +89,47 @@ public class UserDbStorage implements UserStorage {
                 user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null,
                 user.getId());
         return user;
+    }
+
+    @Override
+    public void addFriend(long userId, long friendId) {
+        final String sql = "INSERT INTO FRIENDS (USER_ID, FRIEND_ID) VALUES (?, ?)";
+        jdbc.update(sql, userId, friendId);
+    }
+
+    @Override
+    public void removeFriend(long userId, long friendId) {
+        final String sql = "DELETE FROM FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?";
+        jdbc.update(sql, userId, friendId);
+    }
+
+    @Override
+    public List<User> getFriends(long userId) {
+        final String sql = "SELECT u.* FROM FRIENDS f " +
+                "JOIN USERS u ON u.ID = f.FRIEND_ID " +
+                "WHERE f.USER_ID = ? ORDER BY u.ID";
+        return jdbc.query(sql, (rs, rowNum) -> new User(
+                rs.getLong("id"),
+                rs.getString("email"),
+                rs.getString("login"),
+                rs.getString("name"),
+                rs.getDate("birthday").toLocalDate()
+        ), userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(long userId, long otherId) {
+        final String sql = "SELECT u.* FROM USERS u WHERE u.ID IN (" +
+                "  SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ? " +
+                "  INTERSECT " +
+                "  SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ?" +
+                ") ORDER BY u.ID";
+        return jdbc.query(sql, (rs, rowNum) -> new User(
+                rs.getLong("id"),
+                rs.getString("email"),
+                rs.getString("login"),
+                rs.getString("name"),
+                rs.getDate("birthday").toLocalDate()
+        ), userId, otherId);
     }
 }

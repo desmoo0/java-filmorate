@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,6 @@ public class MpaService {
 
     public Mpa findById(int id) {
         return storage.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("MPA not found: " + id));
+                .orElseThrow(() -> new NoSuchElementException("MPA not found: " + id));
     }
 }

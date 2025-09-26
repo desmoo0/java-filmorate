@@ -33,7 +33,7 @@ public class UserValidationTest {
     @Test
     void shouldFailValidationWhenLoginIsBlank() {
         User user = new User();
-        user.setEmail("mail@example.com");
+        user.setEmail("noreply@mail.ru");
         user.setLogin(" ");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
@@ -44,7 +44,7 @@ public class UserValidationTest {
     @Test
     void shouldFailValidationWhenBirthdayIsInFuture() {
         User user = new User();
-        user.setEmail("mail@example.com");
+        user.setEmail("noreply@mail.ru");
         user.setLogin("login");
         user.setBirthday(LocalDate.now().plusDays(1));
 
@@ -55,7 +55,7 @@ public class UserValidationTest {
     @Test
     void shouldPassValidationWithCorrectUser() {
         User user = new User();
-        user.setEmail("mail@example.com");
+        user.setEmail("noreply@mail.ru");
         user.setLogin("login");
         user.setName("Имя");
         user.setBirthday(LocalDate.of(2000, 1, 1));

@@ -1,68 +1,58 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.LinkedHashSet;
 
+@Slf4j
 @Service
 public class FilmService {
 
     private final FilmStorage films;
-    private final UserService userService; // используем сервис пользователей для валидации существования
-    private final GenreStorage genres;     // могут быть null в юнит-тестах
-    private final MpaStorage mpas;         // могут быть null в юнит-тестах
+    private final GenreStorage genres;
+    private final MpaStorage mpas;
+    private final UserStorage users;  // Если нужно для likes, добавь в конструктор
 
-    /** Конструктор для юнит-тестов без Spring-контекста. */
-    public FilmService(FilmStorage films, UserService userService) {
-        this(films, userService, null, null);
-    }
-
-    /** Базовый конструктор. Если genres/mpas == null — просто не обогащаем ссылки. */
-    public FilmService(FilmStorage films, UserService userService, GenreStorage genres, MpaStorage mpas) {
-        this.films = Objects.requireNonNull(films, "films");
-        this.userService = Objects.requireNonNull(userService, "userService");
-        this.genres = genres;
-        this.mpas = mpas;
-    }
-
-    /**
-     * Конструктор для Spring. Явно просим именно DB-реализации,
-     * чтобы не было коллизии с InMemory бинами.
-     */
-    @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage films,
-                       @Qualifier("userDbStorage") UserStorage users,
                        @Qualifier("genreDbStorage") GenreStorage genres,
-                       @Qualifier("mpaDbStorage") MpaStorage mpas) {
-        this.films = Objects.requireNonNull(films, "films");
-        // Лёгкая обёртка над стораджем — отдельный бин UserService нам не обязателен
-        this.userService = new UserService(users);
+                       @Qualifier("mpaDbStorage") MpaStorage mpas,
+                       @Qualifier("userDbStorage") UserStorage users) {
+        this.films = films;
         this.genres = genres;
         this.mpas = mpas;
+        this.users = users;
     }
 
-    // =========== CRUD ===========
-
+    @Transactional
     public Film create(Film film) {
-        Film toSave = enrichRefs(film);
-        return films.create(toSave);
+        enrichRefs(film);
+        Film created = films.create(film);
+        log.info("Created film {} with genres: {}", created.getId(), created.getGenres());
+        return created;
     }
 
+    @Transactional
     public Film update(Film film) {
-        // проверим, что фильм существует — чтобы получить ожидаемую ошибку при апдейте несуществующего
-        findById(requiredId(film));
-        Film toSave = enrichRefs(film);
-        return films.update(toSave);
+        if (!films.containsKey(film.getId())) {
+            throw new NotFoundException("Film " + film.getId());
+        }
+        enrichRefs(film);
+        Film updated = films.update(film);
+        log.info("Updated film {} with genres: {}", updated.getId(), updated.getGenres());
+        return updated;
     }
 
     public List<Film> findAll() {
@@ -70,78 +60,38 @@ public class FilmService {
     }
 
     public Film findById(Long id) {
-        return films.findById(id).orElseThrow(() ->
-                new NoSuchElementException("Фильм не найден: " + id));
+        return films.findById(id).orElseThrow(() -> new NotFoundException("Film " + id));
     }
 
-    // =========== Лайки / популярность ===========
-
-    /**
-     * Добавляет лайк. Возвращает true при фактическом добавлении (идемпотентно).
-     */
     public void addLike(Long filmId, Long userId) {
-        Film film = findById(filmId);
-        // бросит NoSuchElementException с текстом "не найден", если пользователя нет
-        userService.findById(userId);
-
-        Set<Long> likes = film.getLikes();
-        if (likes == null) {
-            likes = new LinkedHashSet<>();
-            film.setLikes(likes);
-        }
-        boolean added = likes.add(userId);
-        films.update(film); // синхронизация состояния
+        users.findById(userId).orElseThrow(() -> new NotFoundException("User " + userId));
+        films.addLike(filmId, userId);
     }
 
-    /**
-     * Удаляет лайк. Возвращает true при фактическом удалении.
-     */
     public void removeLike(Long filmId, Long userId) {
-        Film film = findById(filmId);
-        Set<Long> likes = film.getLikes();
-        boolean removed = likes != null && likes.remove(userId);
-        films.update(film);
+        users.findById(userId).orElseThrow(() -> new NotFoundException("User " + userId));
+        films.removeLike(filmId, userId);
     }
 
-    /** Топ N фильмов по количеству лайков (по убыванию). */
     public List<Film> getTopFilms(int count) {
-        if (count <= 0) return List.of();
-        return films.findAll().stream()
-                .sorted(Comparator
-                        .comparingInt((Film f) -> f.getLikes() == null ? 0 : f.getLikes().size())
-                        .reversed()
-                        .thenComparing(Film::getId))
-                .limit(count)
-                .collect(Collectors.toList());
+        return films.findPopular(count);
     }
 
-    // =========== Вспомогательные ===========
+    private void enrichRefs(Film film) {
+        film.setMpa(mpas.findById(film.getMpa().getId())
+                .orElseThrow(() -> new NotFoundException("MPA " + film.getMpa().getId())));
 
-    private Film enrichRefs(Film film) {
-        if (film == null) return null;
-
-        // Обогащаем MPA из справочника, если возможно
-        if (mpas != null && film.getMpa() != null) {
-            Mpa full = mpas.findById(film.getMpa().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Неизвестный рейтинг MPA: " + film.getMpa().getId()));
-            film.setMpa(full);
-        }
-
-        // Обогащаем жанры из справочника, если возможно
-        if (genres != null && film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Genre> resolved = film.getGenres().stream()
-                    .map(g -> genres.findById(g.getId())
-                            .orElseThrow(() -> new IllegalArgumentException("Неизвестный жанр: " + g.getId())))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-            film.setGenres(resolved);
-        }
-        return film;
-    }
-
-    private static Long requiredId(Film film) {
-        if (film == null || film.getId() == null) {
-            throw new IllegalArgumentException("Идентификатор фильма не задан");
-        }
-        return film.getId();
+        Set<Genre> resolvedGenres = film.getGenres().stream()
+                .map(g -> {
+                    Genre found = genres.findById(g.getId())
+                            .orElseThrow(() -> new NotFoundException("Genre " + g.getId()));
+                    if (found.getName() == null || found.getName().trim().isEmpty()) {
+                        throw new NotFoundException("Invalid genre name for id " + g.getId());
+                    }
+                    return found;
+                })
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        film.setGenres(resolvedGenres);
+        log.debug("Enriched film with genres: {}", resolvedGenres);
     }
 }

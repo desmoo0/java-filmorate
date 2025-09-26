@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,6 @@ public class GenreService {
 
     public Genre findById(int id) {
         return storage.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Genre not found: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Genre not found: " + id));
     }
 }

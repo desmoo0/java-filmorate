@@ -31,7 +31,6 @@ class FilmDbStorageIT {
 
     @BeforeEach
     void seedDicts() {
-        // MPA и GENRE обязательны для фильмов
         jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (1, 'G')");
         jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (2, 'PG-13')");
         jdbc.update("MERGE INTO GENRE (ID, NAME) KEY(ID) VALUES (1, 'Комедия')");
@@ -95,7 +94,6 @@ class FilmDbStorageIT {
         List<Film> all = films.findAll();
         assertThat(all.size()).isGreaterThanOrEqualTo(2);
 
-        // лайки: b популярнее
         films.addLike(b.getId(), 1L);
         films.addLike(b.getId(), 2L);
         films.addLike(a.getId(), 1L);

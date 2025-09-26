@@ -1,93 +1,51 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Film {
 
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "Имя не может быть пустым")
     private String name;
 
-    @Size(max = 200)
+    @Size(max = 200, message = "Описание максимум 200 символов")
     private String description;
 
-    @PastOrPresent
+    @PastOrPresent(message = "Дата выпуска должна быть прошлой или настоящей")
     private LocalDate releaseDate;
 
-    @Positive
-    private Integer duration;
+    @Positive(message = "Продолжительность должна быть положительной")
+    private int duration;
 
-    @Setter
     private Mpa mpa;
 
+    @Valid
     @Builder.Default
     private Set<Genre> genres = new LinkedHashSet<>();
 
     @Builder.Default
     private Set<Long> likes = new HashSet<>();
 
-    /** Валидация исторической границы кинопоказа 1895-12-28 */
-    @AssertTrue(message = "releaseDate cannot be before 1895-12-28")
-    public boolean isReleaseDateValid() {
+    @AssertTrue(message = "Дата выхода не может быть ранее 1895-12-28")
+    private boolean isReleaseDateValid() {
         return releaseDate == null || !releaseDate.isBefore(LocalDate.of(1895, 12, 28));
     }
 
-    /** Лояльный сеттер для коллекций из мапперов JDBC */
-    public void setGenres(Collection<?> source) {
-        if (source == null) {
-            this.genres = new LinkedHashSet<>();
-            return;
-        }
-        LinkedHashSet<Genre> target = new LinkedHashSet<>();
-        for (Object o : source) {
-            if (o instanceof Genre) {
-                target.add((Genre) o);
-            }
-        }
-        this.genres = target;
-    }
-
-    public Set<Genre> getGenres() {
-        if (genres == null) genres = new LinkedHashSet<>();
-        return genres;
-    }
-
-    public Set<Long> getLikes() {
-        if (likes == null) likes = new HashSet<>();
-        return likes;
-    }
-
     public void addLike(Long userId) {
-        getLikes().add(userId);
+        likes.add(userId);
     }
 
     public void removeLike(Long userId) {
-        getLikes().remove(userId);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Film)) return false;
-        Film film = (Film) o;
-        return id != null && id.equals(film.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id == null ? System.identityHashCode(this) : Objects.hash(id);
+        likes.remove(userId);
     }
 }

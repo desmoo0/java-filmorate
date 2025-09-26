@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.db;
+package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,11 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserDbStorageIT {
 
     private final UserDbStorage userStorage;
-    private final JdbcTemplate jdbc;
 
     @BeforeEach
     void setUp() {
-        // Никаких предварительных данных не требуется
+        // ничего не делаем
     }
 
     @Test

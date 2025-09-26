@@ -26,7 +26,6 @@ class GenreDbStorageIT {
 
     @BeforeEach
     void setUp() {
-        // Схема подтягивается из src/main/resources/schema.sql
         jdbcTemplate.update("DELETE FROM GENRE");
         jdbcTemplate.update("INSERT INTO GENRE (ID, NAME) VALUES (1,'Комедия')");
         jdbcTemplate.update("INSERT INTO GENRE (ID, NAME) VALUES (2,'Драма')");

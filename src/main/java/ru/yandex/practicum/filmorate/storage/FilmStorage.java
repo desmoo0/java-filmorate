@@ -15,4 +15,10 @@ public interface FilmStorage {
     Optional<Film> findById(Long id);
 
     boolean containsKey(Long id);
+
+    void addLike(long filmId, long userId);
+
+    void removeLike(long filmId, long userId);
+
+    List<Film> findPopular(int count);
 }

@@ -28,7 +28,6 @@ public class User {
     @NotBlank
     private String login;
 
-    /** Имя может быть пустым, правка имени выполняется в сервисе */
     private String name;
 
     @PastOrPresent
@@ -37,7 +36,6 @@ public class User {
     @Builder.Default
     private Set<Long> friends = new HashSet<>();
 
-    /** Конструктор, которого ждут тесты: (id, email, login, name, birthday) */
     public User(long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
         this.email = email;
@@ -47,13 +45,11 @@ public class User {
         this.friends = new HashSet<>();
     }
 
-    /** Гарантируем не-null коллекцию */
     public Set<Long> getFriends() {
         if (friends == null) friends = new HashSet<>();
         return friends;
     }
 
-    /** Равенство по id, если он задан */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
