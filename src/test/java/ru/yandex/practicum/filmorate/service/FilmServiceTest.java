@@ -71,12 +71,13 @@ class FilmServiceTest {
         assertEquals(2, created.getGenres().size());
         assertTrue(created.getGenres().stream().anyMatch(g -> "Комедия".equals(g.getName())));
         assertTrue(created.getGenres().stream().anyMatch(g -> "Драма".equals(g.getName())));
-
         verify(filmStorage, times(1)).create(testFilm);
     }
 
     @Test
     void shouldUpdateFilmWithGenres() {
+        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
+        when(genreStorage.findById(1)).thenReturn(Optional.of(new Genre(1, "Комедия")));
         when(filmStorage.containsKey(1L)).thenReturn(true);
         when(filmStorage.update(any(Film.class))).thenReturn(testFilm);
 
@@ -88,11 +89,15 @@ class FilmServiceTest {
         Film updated = filmService.update(testFilm);
 
         assertEquals(1, updated.getGenres().size());
+        assertTrue(updated.getGenres().stream().anyMatch(g -> "Комедия".equals(g.getName())));
         verify(filmStorage, times(1)).update(testFilm);
     }
 
     @Test
     void shouldThrowNotFoundForInvalidGenre() {
+        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
+        when(genreStorage.findById(999)).thenReturn(Optional.empty());
+
         testFilm.setMpa(new Mpa(1, null));
         Set<Genre> genres = new LinkedHashSet<>();
         genres.add(new Genre(999, null));
@@ -107,7 +112,7 @@ class FilmServiceTest {
         testFilm.setId(1L);
         testUser.setId(1L);
 
-        when(filmStorage.containsKey(1L)).thenReturn(true);
+        when(userStorage.findById(1L)).thenReturn(Optional.of(testUser));
 
         filmService.addLike(1L, 1L);
         verify(filmStorage, times(1)).addLike(1L, 1L);
