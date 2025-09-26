@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.MpaService;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.List;
 
@@ -16,17 +17,17 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping
 public class DictController {
-    private final GenreService genreService;
+    private final GenreStorage storage;
     private final MpaService mpaService;
 
     @GetMapping("/genres")
     public List<Genre> getGenres() {
-        return genreService.findAll();
+        return storage.findAll();
     }
 
     @GetMapping("/genres/{id}")
     public Genre getGenre(@PathVariable int id) {
-        return genreService.findById(id);
+        return storage.findById(id).orElseThrow();
     }
 
     @GetMapping("/mpa")
