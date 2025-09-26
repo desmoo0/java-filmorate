@@ -1,36 +1,28 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import ru.yandex.practicum.filmorate.model.film.Genre;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/genres")
+@RequiredArgsConstructor
 public class GenreController {
-
     private final GenreStorage storage;
 
-    public GenreController(GenreStorage storage) {
-        this.storage = storage;
+    @GetMapping("/genres")
+    public List<Genre> getGenres() {
+        return storage.findAll();
     }
 
-    @GetMapping
-    public List<Genre> getAllGenres() {
-        return storage.getAll();
-    }
-
-    @GetMapping("/{id}")
-    public Genre getGenreById(@PathVariable int id) {
-        return storage.getById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Жанр с id=" + id + " не найден"
-                        )
-                );
+    @GetMapping("/genres/{id}")
+    public Genre getGenre(@PathVariable int id) {
+        return storage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Genre " + id));
     }
 }
