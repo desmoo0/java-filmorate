@@ -79,16 +79,22 @@ class FilmDbStorageIT {
     void findAll_and_popular() {
         // фильм 1
         Film a = new Film();
-        a.setName("A"); a.setDescription("d"); a.setReleaseDate(LocalDate.of(2000,1,1)); a.setDuration(90);
-        a.setMpa(new Mpa(1,null));
-        a.setGenres(new LinkedHashSet<>(List.of(new Genre(1,null))));
+        a.setName("A");
+        a.setDescription("d");
+        a.setReleaseDate(LocalDate.of(2000, 1, 1));
+        a.setDuration(90);
+        a.setMpa(new Mpa(1, null));
+        a.setGenres(new LinkedHashSet<>(List.of(new Genre(1, null))));
         a = films.create(a);
 
         // фильм 2
         Film b = new Film();
-        b.setName("B"); b.setDescription("d"); b.setReleaseDate(LocalDate.of(2000,2,1)); b.setDuration(95);
-        b.setMpa(new Mpa(2,null));
-        b.setGenres(new LinkedHashSet<>(List.of(new Genre(2,null))));
+        b.setName("B");
+        b.setDescription("d");
+        b.setReleaseDate(LocalDate.of(2000, 2, 1));
+        b.setDuration(95);
+        b.setMpa(new Mpa(2, null));
+        b.setGenres(new LinkedHashSet<>(List.of(new Genre(2, null))));
         b = films.create(b);
 
         List<Film> all = films.findAll();
