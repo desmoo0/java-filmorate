@@ -12,10 +12,10 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.LinkedHashSet;
 
 @Slf4j
 @Service
@@ -24,7 +24,7 @@ public class FilmService {
     private final FilmStorage films;
     private final GenreStorage genres;
     private final MpaStorage mpas;
-    private final UserStorage users;  // Если нужно для likes, добавь в конструктор
+    private final UserStorage users;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage films,
                        @Qualifier("genreDbStorage") GenreStorage genres,

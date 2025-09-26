@@ -43,10 +43,6 @@ public class UserDbStorage implements UserStorage {
         return list.isEmpty() ? Optional.empty() : Optional.of(list.getFirst());
     }
 
-    public Optional<User> findUserById(long id) {
-        return findById(id);
-    }
-
     @Override
     public List<User> findAll() {
         final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";

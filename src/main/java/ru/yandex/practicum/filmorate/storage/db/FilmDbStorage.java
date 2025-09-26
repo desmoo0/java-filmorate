@@ -106,7 +106,7 @@ public class FilmDbStorage implements FilmStorage {
         try {
             jdbc.update("INSERT INTO LIKES (FILM_ID, USER_ID) VALUES (?, ?)", filmId, userId);
         } catch (DuplicateKeyException ignore) {
-            // Игнорируем попытку повторно поставить лайк
+            // Игнорируем попытку повторно поставить лайк, потом можно будет реализовать убирание лайка
         }
     }
 

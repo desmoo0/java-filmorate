@@ -30,8 +30,6 @@ public class GenreDbStorage implements GenreStorage {
             Genre genre = jdbc.queryForObject(sql, this::mapRowToGenre, id);
             return Optional.of(genre);
         } catch (EmptyResultDataAccessException e) {
-            // Если результат не найден, queryForObject выбрасывает это исключение,
-            // и мы возвращаем пустой Optional, как и ожидается.
             return Optional.empty();
         }
     }

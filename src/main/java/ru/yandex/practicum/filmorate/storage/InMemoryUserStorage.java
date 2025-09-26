@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
-    // Добавляем хранилище для друзей: ключ - ID пользователя, значение - множество ID его друзей
     private final Map<Long, Set<Long>> friends = new HashMap<>();
     private long currentId = 1L;
 
