@@ -21,6 +21,16 @@ import java.util.Optional;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbc;
+    private final RowMapper<User> USER_MAPPER = (rs, rn) -> {
+        User u = new User();
+        u.setId(rs.getLong("ID"));
+        u.setEmail(rs.getString("EMAIL"));
+        u.setLogin(rs.getString("LOGIN"));
+        u.setName(rs.getString("NAME"));
+        java.sql.Date birthdayDate = rs.getDate("BIRTHDAY");
+        u.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
+        return u;
+    };
 
     @Override
     public boolean containsKey(Long id) {
@@ -49,17 +59,6 @@ public class UserDbStorage implements UserStorage {
         final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";
         return jdbc.query(sql, USER_MAPPER);
     }
-
-    private final RowMapper<User> USER_MAPPER = (rs, rn) -> {
-        User u = new User();
-        u.setId(rs.getLong("ID"));
-        u.setEmail(rs.getString("EMAIL"));
-        u.setLogin(rs.getString("LOGIN"));
-        u.setName(rs.getString("NAME"));
-        java.sql.Date birthdayDate = rs.getDate("BIRTHDAY");
-        u.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
-        return u;
-    };
 
     @Override
     public User create(User user) {
