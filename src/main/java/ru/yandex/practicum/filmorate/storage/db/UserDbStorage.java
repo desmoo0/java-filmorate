@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.db;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -46,17 +47,19 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> findAll() {
         final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";
-        return jdbc.query(sql, (rs, rn) -> {
-            User u = new User();
-            u.setId(rs.getLong("ID"));
-            u.setEmail(rs.getString("EMAIL"));
-            u.setLogin(rs.getString("LOGIN"));
-            u.setName(rs.getString("NAME"));
-            Date d = rs.getDate("BIRTHDAY");
-            u.setBirthday(d != null ? d.toLocalDate() : null);
-            return u;
-        });
+        return jdbc.query(sql, USER_MAPPER);
     }
+
+    private final RowMapper<User> USER_MAPPER = (rs, rn) -> {
+        User u = new User();
+        u.setId(rs.getLong("ID"));
+        u.setEmail(rs.getString("EMAIL"));
+        u.setLogin(rs.getString("LOGIN"));
+        u.setName(rs.getString("NAME"));
+        java.sql.Date birthdayDate = rs.getDate("BIRTHDAY");
+        u.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
+        return u;
+    };
 
     @Override
     public User create(User user) {
@@ -115,11 +118,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(long userId, long otherId) {
-        final String sql = "SELECT u.* FROM USERS u WHERE u.ID IN (" +
-                "  SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ? " +
-                "  INTERSECT " +
-                "  SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ?" +
-                ") ORDER BY u.ID";
+        final String sql = "SELECT u.* " +
+                " FROM USERS u " +
+                " JOIN FRIENDS f1 ON u.ID = f1.FRIEND_ID AND f1.USER_ID = ? " +
+                " JOIN FRIENDS f2 ON u.ID = f2.FRIEND_ID AND f2.USER_ID = ? " +
+                " ORDER BY u.ID; ";
         return jdbc.query(sql, (rs, rowNum) -> new User(
                 rs.getLong("id"),
                 rs.getString("email"),

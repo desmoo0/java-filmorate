@@ -27,8 +27,8 @@ public class FilmService {
     private final UserStorage users;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage films,
-                       @Qualifier("genreDbStorage") GenreStorage genres,
-                       @Qualifier("mpaDbStorage") MpaStorage mpas,
+                       GenreStorage genres,
+                       MpaStorage mpas,
                        @Qualifier("userDbStorage") UserStorage users) {
         this.films = films;
         this.genres = genres;
