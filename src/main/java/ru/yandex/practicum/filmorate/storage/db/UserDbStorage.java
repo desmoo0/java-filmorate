@@ -21,7 +21,7 @@ import java.util.Optional;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbc;
-    private final RowMapper<User> USER_MAPPER = (rs, rn) -> {
+    private final RowMapper<User> userMapper = (rs, rn) -> {
         User u = new User();
         u.setId(rs.getLong("ID"));
         u.setEmail(rs.getString("EMAIL"));
@@ -57,7 +57,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> findAll() {
         final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";
-        return jdbc.query(sql, USER_MAPPER);
+        return jdbc.query(sql, userMapper);
     }
 
     @Override
