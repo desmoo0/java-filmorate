@@ -2,9 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,7 +16,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@JdbcTest
+@AutoConfigureTestDatabase
+@Import(UserDbStorage.class)
 class UserServiceTest {
+
+    @Autowired
+    private UserDbStorage userDbStorage;
 
     private UserService userService;
 
@@ -22,15 +32,15 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 1. Создаем наше "игрушечное" хранилище
-        UserStorage userStorage = new InMemoryUserStorage();
+        // 1. Используем реальное БД-хранилище
+        UserStorage userStorage = userDbStorage;
         // 2. Создаем сервис, передавая ему это хранилище
         userService = new UserService(userStorage, null);
 
         // 3. Создаем тестовых пользователей и сохраняем их
-        user1 = new User(0L, "user1@mail.com", "user1", "User One", LocalDate.of(1990, 1, 1), null);
-        user2 = new User(0L, "user2@mail.com", "user2", "User Two", LocalDate.of(1991, 2, 2), null);
-        user3 = new User(0L, "user3@mail.com", "user3", "User Three", LocalDate.of(1992, 3, 3), null);
+        user1 = new User(0L, "user1@mail.com", "user1", "User One", LocalDate.of(1990, 1, 1));
+        user2 = new User(0L, "user2@mail.com", "user2", "User Two", LocalDate.of(1991, 2, 2));
+        user3 = new User(0L, "user3@mail.com", "user3", "User Three", LocalDate.of(1992, 3, 3));
 
         // Сохраняем пользователей через сервис, чтобы он присвоил им ID
         user1 = userService.create(user1);
