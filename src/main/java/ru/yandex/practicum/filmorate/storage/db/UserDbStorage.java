@@ -8,7 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.function.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -20,67 +20,67 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
 
-    private final JdbcTemplate jdbc;
-    private final RowMapper<User> userMapper = (rs, rn) -> {
-        User u = new User();
-        u.setId(rs.getLong("ID"));
-        u.setEmail(rs.getString("EMAIL"));
-        u.setLogin(rs.getString("LOGIN"));
-        u.setName(rs.getString("NAME"));
-        java.sql.Date birthdayDate = rs.getDate("BIRTHDAY");
-        u.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
-        return u;
+    private final JdbcTemplate jdbcTemplate;
+    private final RowMapper<User> userRowMapper = (resultSet, rowNum) -> {
+        User user = new User();
+        user.setId(resultSet.getLong("ID"));
+        user.setEmail(resultSet.getString("EMAIL"));
+        user.setLogin(resultSet.getString("LOGIN"));
+        user.setName(resultSet.getString("NAME"));
+        Date birthdaySqlDate = resultSet.getDate("BIRTHDAY");
+        user.setBirthday(birthdaySqlDate != null ? birthdaySqlDate.toLocalDate() : null);
+        return user;
     };
 
     @Override
-    public boolean containsKey(Long id) {
-        Integer cnt = jdbc.queryForObject("SELECT COUNT(1) FROM USERS WHERE ID=?", Integer.class, id);
-        return cnt != null && cnt > 0;
+    public boolean containsKey(Long userId) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(1) FROM USERS WHERE ID=?", Integer.class, userId);
+        return count != null && count > 0;
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS WHERE ID=?";
-        List<User> list = jdbc.query(sql, (rs, rn) -> {
-            User u = new User();
-            u.setId(rs.getLong("ID"));
-            u.setEmail(rs.getString("EMAIL"));
-            u.setLogin(rs.getString("LOGIN"));
-            u.setName(rs.getString("NAME"));
-            Date d = rs.getDate("BIRTHDAY");
-            u.setBirthday(d != null ? d.toLocalDate() : null);
-            return u;
-        }, id);
-        return list.isEmpty() ? Optional.empty() : Optional.of(list.getFirst());
+    public Optional<User> findById(Long userId) {
+        final String sqlQuery = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS WHERE ID=?";
+        List<User> userList = jdbcTemplate.query(sqlQuery, (resultSet, rowNum) -> {
+            User user = new User();
+            user.setId(resultSet.getLong("ID"));
+            user.setEmail(resultSet.getString("EMAIL"));
+            user.setLogin(resultSet.getString("LOGIN"));
+            user.setName(resultSet.getString("NAME"));
+            Date birthdayDate = resultSet.getDate("BIRTHDAY");
+            user.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
+            return user;
+        }, userId);
+        return userList.isEmpty() ? Optional.empty() : Optional.of(userList.get(0));
     }
 
     @Override
     public List<User> findAll() {
-        final String sql = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";
-        return jdbc.query(sql, userMapper);
+        final String sqlQuery = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS ORDER BY ID";
+        return jdbcTemplate.query(sqlQuery, userRowMapper);
     }
 
     @Override
     public User create(User user) {
-        final String sql = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES (?, ?, ?, ?)";
-        KeyHolder kh = new GeneratedKeyHolder();
-        jdbc.update(con -> {
-            PreparedStatement ps = con.prepareStatement(sql, new String[]{"ID"});
-            ps.setString(1, user.getEmail());
-            ps.setString(2, user.getLogin());
-            ps.setString(3, user.getName());
-            ps.setDate(4, user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null);
-            return ps;
-        }, kh);
-        Number key = kh.getKey();
-        if (key != null) user.setId(key.longValue());
+        final String sqlQuery = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES (?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, new String[]{"ID"});
+            preparedStatement.setString(1, user.getEmail());
+            preparedStatement.setString(2, user.getLogin());
+            preparedStatement.setString(3, user.getName());
+            preparedStatement.setDate(4, user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null);
+            return preparedStatement;
+        }, keyHolder);
+        Number generatedKey = keyHolder.getKey();
+        if (generatedKey != null) user.setId(generatedKey.longValue());
         return user;
     }
 
     @Override
     public User update(User user) {
-        final String sql = "UPDATE USERS SET EMAIL=?, LOGIN=?, NAME=?, BIRTHDAY=? WHERE ID=?";
-        jdbc.update(sql,
+        final String sqlQuery = "UPDATE USERS SET EMAIL=?, LOGIN=?, NAME=?, BIRTHDAY=? WHERE ID=?";
+        jdbcTemplate.update(sqlQuery,
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
@@ -91,43 +91,43 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        final String sql = "INSERT INTO FRIENDS (USER_ID, FRIEND_ID) VALUES (?, ?)";
-        jdbc.update(sql, userId, friendId);
+        final String sqlQuery = "INSERT INTO FRIENDS (USER_ID, FRIEND_ID) VALUES (?, ?)";
+        jdbcTemplate.update(sqlQuery, userId, friendId);
     }
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        final String sql = "DELETE FROM FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?";
-        jdbc.update(sql, userId, friendId);
+        final String sqlQuery = "DELETE FROM FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?";
+        jdbcTemplate.update(sqlQuery, userId, friendId);
     }
 
     @Override
     public List<User> getFriends(long userId) {
-        final String sql = "SELECT u.* FROM FRIENDS f " +
+        final String sqlQuery = "SELECT u.* FROM FRIENDS f " +
                 "JOIN USERS u ON u.ID = f.FRIEND_ID " +
                 "WHERE f.USER_ID = ? ORDER BY u.ID";
-        return jdbc.query(sql, (rs, rowNum) -> new User(
-                rs.getLong("id"),
-                rs.getString("email"),
-                rs.getString("login"),
-                rs.getString("name"),
-                rs.getDate("birthday").toLocalDate()
+        return jdbcTemplate.query(sqlQuery, (resultSet, rowNum) -> new User(
+                resultSet.getLong("id"),
+                resultSet.getString("email"),
+                resultSet.getString("login"),
+                resultSet.getString("name"),
+                resultSet.getDate("birthday").toLocalDate()
         ), userId);
     }
 
     @Override
-    public List<User> getCommonFriends(long userId, long otherId) {
-        final String sql = "SELECT u.* " +
+    public List<User> getCommonFriends(long userId, long anotherUserId) {
+        final String sqlQuery = "SELECT u.* " +
                 " FROM USERS u " +
                 " JOIN FRIENDS f1 ON u.ID = f1.FRIEND_ID AND f1.USER_ID = ? " +
                 " JOIN FRIENDS f2 ON u.ID = f2.FRIEND_ID AND f2.USER_ID = ? " +
                 " ORDER BY u.ID; ";
-        return jdbc.query(sql, (rs, rowNum) -> new User(
-                rs.getLong("id"),
-                rs.getString("email"),
-                rs.getString("login"),
-                rs.getString("name"),
-                rs.getDate("birthday").toLocalDate()
-        ), userId, otherId);
+        return jdbcTemplate.query(sqlQuery, (resultSet, rowNum) -> new User(
+                resultSet.getLong("id"),
+                resultSet.getString("email"),
+                resultSet.getString("login"),
+                resultSet.getString("name"),
+                resultSet.getDate("birthday").toLocalDate()
+        ), userId, anotherUserId);
     }
 }

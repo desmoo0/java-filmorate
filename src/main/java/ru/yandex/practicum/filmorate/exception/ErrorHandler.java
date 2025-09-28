@@ -18,52 +18,52 @@ public class ErrorHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ValidationErrorResponse handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
-        log.warn("{}", errors);
-        return new ValidationErrorResponse("", errors);
+    public ValidationErrorResponse handleValidation(MethodArgumentNotValidException validationException) {
+        Map<String, String> fieldErrorsMap = new HashMap<>();
+        validationException.getBindingResult().getFieldErrors().forEach(fieldError -> fieldErrorsMap.put(fieldError.getField(), fieldError.getDefaultMessage()));
+        log.warn("{}", fieldErrorsMap);
+        return new ValidationErrorResponse("", fieldErrorsMap);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoSuchElementException.class)
-    public ErrorResponse handleNotFound(NoSuchElementException ex) {
-        log.warn("{}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
+    public ErrorResponse handleNoSuchElementException(NoSuchElementException noSuchElementException) {
+        log.warn("{}", noSuchElementException.getMessage());
+        return new ErrorResponse(noSuchElementException.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ExistingUserException.class)
-    public ErrorResponse handleUserExists(ExistingUserException ex) {
-        log.warn("{}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
+    public ErrorResponse handleExistingUserException(ExistingUserException existingUserException) {
+        log.warn("{}", existingUserException.getMessage());
+        return new ErrorResponse(existingUserException.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ExistingMovieException.class)
-    public ErrorResponse handleFilmExists(ExistingMovieException ex) {
-        log.warn("{}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
+    public ErrorResponse handleExistingMovieException(ExistingMovieException existingMovieException) {
+        log.warn("{}", existingMovieException.getMessage());
+        return new ErrorResponse(existingMovieException.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public ErrorResponse handleAnyException(Exception ex) {
-        log.error("{}", ex.getMessage(), ex);
-        return new ErrorResponse(ex.getMessage());
+    public ErrorResponse handleAnyException(Exception generalException) {
+        log.error("{}", generalException.getMessage(), generalException);
+        return new ErrorResponse(generalException.getMessage());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
-    public ErrorResponse handleNotFound(NotFoundException ex) {
-        log.warn("{}", ex.getMessage());
-        return new ErrorResponse(ex.getMessage());
+    public ErrorResponse handleNotFoundException(NotFoundException notFoundException) {
+        log.warn("{}", notFoundException.getMessage());
+        return new ErrorResponse(notFoundException.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(SQLException.class)
-    public ErrorResponse handleDbError(SQLException ex) {
-        log.warn("DB error: {}", ex.getMessage());
-        return new ErrorResponse("Invalid data: " + ex.getMessage());
+    public ErrorResponse handleSqlException(SQLException sqlException) {
+        log.warn("DB error: {}", sqlException.getMessage());
+        return new ErrorResponse("Invalid data: " + sqlException.getMessage());
     }
 }

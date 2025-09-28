@@ -6,7 +6,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.function.GenreStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,7 +36,7 @@ public class GenreDbStorage implements GenreStorage {
         }
     }
 
-    private Genre mapRowToGenre(ResultSet rs, int rowNum) throws SQLException {
-        return new Genre(rs.getInt("ID"), rs.getString("NAME"));
+    private Genre mapRowToGenre(ResultSet resultSet, int rowNum) throws SQLException {
+        return new Genre(resultSet.getInt("ID"), resultSet.getString("NAME"));
     }
 }

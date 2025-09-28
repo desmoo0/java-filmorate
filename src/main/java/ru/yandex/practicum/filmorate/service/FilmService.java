@@ -1,16 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MpaStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.function.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.function.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.function.MpaStorage;
+import ru.yandex.practicum.filmorate.storage.function.UserStorage;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,10 +25,10 @@ public class FilmService {
     private final MpaStorage mpas;
     private final UserStorage users;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage films,
+    public FilmService(FilmStorage films,
                        GenreStorage genres,
                        MpaStorage mpas,
-                       @Qualifier("userDbStorage") UserStorage users) {
+                       UserStorage users) {
         this.films = films;
         this.genres = genres;
         this.mpas = mpas;
