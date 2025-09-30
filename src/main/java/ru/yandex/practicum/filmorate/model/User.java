@@ -1,29 +1,52 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     private Long id;
 
-    @NotBlank(message = "Емайл пользователя не может быть пустым")
-    @NotNull(message = "Емайл пользователя не может быть пустым")
+    @Email
+    @NotBlank
     private String email;
 
-    @NotBlank(message = "Логин пользователя не может быть пустым")
+    @NotBlank
     private String login;
 
     private String name;
 
-    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    @PastOrPresent
     private LocalDate birthday;
 
-    private final Set<Long> friends = new HashSet<>();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id == null ? System.identityHashCode(this) : Objects.hash(id);
+    }
+
+    public void normalizeName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+    }
 }

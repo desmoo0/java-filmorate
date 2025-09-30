@@ -1,99 +1,73 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ExistingUserException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.function.UserStorage;
 
-import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
-    private final UserStorage userStorage;
+
+    private final UserStorage users;
 
     @Autowired
-    public UserService(UserStorage userStorage, FilmStorage filmStorage) {
-        this.userStorage = userStorage;
+    public UserService(@Qualifier("userDbStorage") UserStorage users) {
+        this.users = users;
     }
 
-    public List<User> getFriends(Long id) {
-        User user = findById(id);
-        return user.getFriends().stream()
-                .map(userStorage::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList();
-    }
-
-    public void addFriend(Long userId, Long friendId) {
-        User user = userStorage.findById(userId).orElseThrow();
-        User friend = userStorage.findById(friendId).orElseThrow();
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-    }
-
-    public void removeFriend(Long userId, Long friendId) {
-        User user = userStorage.findById(userId).orElseThrow();
-        User friend = userStorage.findById(friendId).orElseThrow();
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-    }
-
-    public List<User> getCommonFriends(Long id1, Long id2) {
-        User u1 = userStorage.findById(id1).orElseThrow();
-        User u2 = userStorage.findById(id2).orElseThrow();
-
-        Set<Long> commonIds = new HashSet<>(u1.getFriends());
-        commonIds.retainAll(u2.getFriends());
-
-        return commonIds.stream()
-                .map(userStorage::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList();
+    public UserService(UserStorage users, Object dummy) {
+        this.users = users;
     }
 
     public User create(User user) {
-        if (user.getId() != null && userStorage.containsKey(user.getId())) {
-            throw new ExistingUserException("Пользователь с таким ID уже существует.");
-        }
-
-        if (user.getLogin().contains(" ")) {
-            throw new ExistingUserException("Логин не может содержать пробелы.");
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ExistingUserException("Дата рождения не может быть в будущем.");
-        }
-        return userStorage.create(user);
+        user.normalizeName(user);
+        return users.create(user);
     }
 
     public User update(User user) {
-        if (user.getId() == null || !userStorage.containsKey(user.getId())) {
-            throw new NoSuchElementException("Пользователь не найден.");
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        return userStorage.update(user);
+        findById(requiredId(user));
+        user.normalizeName(user);
+        return users.update(user);
     }
 
     public List<User> findAll() {
-        return userStorage.findAll();
+        return users.findAll();
     }
 
     public User findById(Long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Пользователь с id=" + id + " не найден"));
+        return users.findById(id).orElseThrow(() ->
+                new NoSuchElementException("Пользователь не найден: " + id));
+    }
+
+    public void addFriend(Long id, Long friendId) {
+        findById(id);
+        findById(friendId);
+        users.addFriend(id, friendId);
+    }
+
+    public void removeFriend(Long id, Long friendId) {
+        findById(id);
+        findById(friendId);
+        users.removeFriend(id, friendId);
+    }
+
+    public List<User> getFriends(Long id) {
+        findById(id);
+        return users.getFriends(id);
+    }
+
+    public List<User> getCommonFriends(Long id, Long otherId) {
+        return users.getCommonFriends(id, otherId);
+    }
+
+    private Long requiredId(User user) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("Идентификатор пользователя не задан");
+        }
+        return user.getId();
     }
 }

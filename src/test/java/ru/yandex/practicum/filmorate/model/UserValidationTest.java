@@ -1,13 +1,17 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.validation.*;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserValidationTest {
 
@@ -21,10 +25,11 @@ public class UserValidationTest {
 
     @Test
     void shouldFailValidationWhenEmailIsBlank() {
-        User user = new User();
-        user.setEmail("   ");
-        user.setLogin("login");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = User.builder()
+                .email("   ")
+                .login("login")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -32,10 +37,11 @@ public class UserValidationTest {
 
     @Test
     void shouldFailValidationWhenLoginIsBlank() {
-        User user = new User();
-        user.setEmail("mail@example.com");
-        user.setLogin(" ");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = User.builder()
+                .email("noreply@mail.ru")
+                .login(" ")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -43,10 +49,11 @@ public class UserValidationTest {
 
     @Test
     void shouldFailValidationWhenBirthdayIsInFuture() {
-        User user = new User();
-        user.setEmail("mail@example.com");
-        user.setLogin("login");
-        user.setBirthday(LocalDate.now().plusDays(1));
+        User user = User.builder()
+                .email("noreply@mail.ru")
+                .login("login")
+                .birthday(LocalDate.now().plusDays(1))
+                .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -54,11 +61,12 @@ public class UserValidationTest {
 
     @Test
     void shouldPassValidationWithCorrectUser() {
-        User user = new User();
-        user.setEmail("mail@example.com");
-        user.setLogin("login");
-        user.setName("Имя");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = User.builder()
+                .email("noreply@mail.ru")
+                .login("login")
+                .name("Имя")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
