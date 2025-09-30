@@ -5,20 +5,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User {
-
     private Long id;
 
     @Email
@@ -33,23 +32,6 @@ public class User {
     @PastOrPresent
     private LocalDate birthday;
 
-    @Builder.Default
-    private Set<Long> friends = new HashSet<>();
-
-    public User(long id, String email, String login, String name, LocalDate birthday) {
-        this.id = id;
-        this.email = email;
-        this.login = login;
-        this.name = name;
-        this.birthday = birthday;
-        this.friends = new HashSet<>();
-    }
-
-    public Set<Long> getFriends() {
-        if (friends == null) friends = new HashSet<>();
-        return friends;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,5 +42,11 @@ public class User {
     @Override
     public int hashCode() {
         return id == null ? System.identityHashCode(this) : Objects.hash(id);
+    }
+
+    public void normalizeName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }

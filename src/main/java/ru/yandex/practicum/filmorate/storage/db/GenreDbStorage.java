@@ -37,6 +37,9 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     private Genre mapRowToGenre(ResultSet resultSet, int rowNum) throws SQLException {
-        return new Genre(resultSet.getInt("ID"), resultSet.getString("NAME"));
+        Genre genre = new Genre();
+        genre.setId(resultSet.getInt("ID"));
+        genre.setName(resultSet.getString("NAME"));
+        return genre;
     }
 }

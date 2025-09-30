@@ -21,16 +21,13 @@ import java.util.Optional;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final RowMapper<User> userRowMapper = (resultSet, rowNum) -> {
-        User user = new User();
-        user.setId(resultSet.getLong("ID"));
-        user.setEmail(resultSet.getString("EMAIL"));
-        user.setLogin(resultSet.getString("LOGIN"));
-        user.setName(resultSet.getString("NAME"));
-        Date birthdaySqlDate = resultSet.getDate("BIRTHDAY");
-        user.setBirthday(birthdaySqlDate != null ? birthdaySqlDate.toLocalDate() : null);
-        return user;
-    };
+    private final RowMapper<User> userRowMapper = (resultSet, rowNum) -> new User(
+            resultSet.getLong("ID"),
+            resultSet.getString("EMAIL"),
+            resultSet.getString("LOGIN"),
+            resultSet.getString("NAME"),
+            resultSet.getDate("BIRTHDAY") != null ? resultSet.getDate("BIRTHDAY").toLocalDate() : null
+    );
 
     @Override
     public boolean containsKey(Long userId) {
@@ -41,16 +38,13 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> findById(Long userId) {
         final String sqlQuery = "SELECT ID, EMAIL, LOGIN, NAME, BIRTHDAY FROM USERS WHERE ID=?";
-        List<User> userList = jdbcTemplate.query(sqlQuery, (resultSet, rowNum) -> {
-            User user = new User();
-            user.setId(resultSet.getLong("ID"));
-            user.setEmail(resultSet.getString("EMAIL"));
-            user.setLogin(resultSet.getString("LOGIN"));
-            user.setName(resultSet.getString("NAME"));
-            Date birthdayDate = resultSet.getDate("BIRTHDAY");
-            user.setBirthday(birthdayDate != null ? birthdayDate.toLocalDate() : null);
-            return user;
-        }, userId);
+        List<User> userList = jdbcTemplate.query(sqlQuery, (resultSet, rowNum) -> new User(
+                resultSet.getLong("ID"),
+                resultSet.getString("EMAIL"),
+                resultSet.getString("LOGIN"),
+                resultSet.getString("NAME"),
+                resultSet.getDate("BIRTHDAY") != null ? resultSet.getDate("BIRTHDAY").toLocalDate() : null
+        ), userId);
         return userList.isEmpty() ? Optional.empty() : Optional.of(userList.get(0));
     }
 

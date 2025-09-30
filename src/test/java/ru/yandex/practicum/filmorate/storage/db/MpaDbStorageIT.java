@@ -20,21 +20,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({MpaDbStorage.class})
 class MpaDbStorageIT {
 
-    private final MpaDbStorage storage;
-    private final JdbcTemplate jdbc;
+    private final MpaDbStorage mpaDbStorage;
+    private final JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void seedDict() {
-        jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (1, 'G')");
-        jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (2, 'PG')");
+    void seedDatabase() {
+        jdbcTemplate.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (1, 'G')");
+        jdbcTemplate.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (2, 'PG')");
     }
 
     @Test
     void findAll_and_findById_work() {
-        List<Mpa> all = storage.findAll();
-        assertThat(all).isNotEmpty();
+        List<Mpa> allMpas = mpaDbStorage.findAll();
+        assertThat(allMpas).isNotEmpty();
 
-        Mpa m = storage.findById(1).orElseThrow();
-        assertThat(m.getName()).isEqualTo("G");
+        Mpa mpa = mpaDbStorage.findById(1).orElseThrow();
+        assertThat(mpa.getName()).isEqualTo("G");
     }
 }

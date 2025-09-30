@@ -24,13 +24,13 @@ public class UserService {
     }
 
     public User create(User user) {
-        normalizeName(user);
+        user.normalizeName(user);
         return users.create(user);
     }
 
     public User update(User user) {
         findById(requiredId(user));
-        normalizeName(user);
+        user.normalizeName(user);
         return users.update(user);
     }
 
@@ -62,12 +62,6 @@ public class UserService {
 
     public List<User> getCommonFriends(Long id, Long otherId) {
         return users.getCommonFriends(id, otherId);
-    }
-
-    private void normalizeName(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
     }
 
     private Long requiredId(User user) {

@@ -1,3 +1,4 @@
+// src/test/java/ru/yandex/practicum/filmorate/service/FilmServiceTest.java
 package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,14 +13,11 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.function.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.function.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.function.MpaStorage;
-import ru.yandex.practicum.filmorate.storage.function.UserStorage;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,13 +31,13 @@ class FilmServiceTest {
     private FilmStorage filmStorage;
 
     @Mock
-    private GenreStorage genreStorage;
+    private GenreService genreService;
 
     @Mock
-    private MpaStorage mpaStorage;
+    private MpaService mpaService;
 
     @Mock
-    private UserStorage userStorage;
+    private UserService userService;
 
     @InjectMocks
     private FilmService filmService;
@@ -55,9 +53,9 @@ class FilmServiceTest {
 
     @Test
     void shouldCreateFilmWithGenres() {
-        when(genreStorage.findById(1)).thenReturn(Optional.of(new Genre(1, "Комедия")));
-        when(genreStorage.findById(2)).thenReturn(Optional.of(new Genre(2, "Драма")));
-        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
+        when(genreService.findById(1)).thenReturn(new Genre(1, "Комедия"));
+        when(genreService.findById(2)).thenReturn(new Genre(2, "Драма"));
+        when(mpaService.findById(1)).thenReturn(new Mpa(1, "G"));
         when(filmStorage.create(any(Film.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Set<Genre> genres = new LinkedHashSet<>();
@@ -76,8 +74,8 @@ class FilmServiceTest {
 
     @Test
     void shouldUpdateFilmWithGenres() {
-        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
-        when(genreStorage.findById(1)).thenReturn(Optional.of(new Genre(1, "Комедия")));
+        when(mpaService.findById(1)).thenReturn(new Mpa(1, "G"));
+        when(genreService.findById(1)).thenReturn(new Genre(1, "Комедия"));
         when(filmStorage.containsKey(1L)).thenReturn(true);
         when(filmStorage.update(any(Film.class))).thenReturn(testFilm);
 
@@ -94,17 +92,17 @@ class FilmServiceTest {
     }
 
     @Test
-    void shouldThrowNotFoundForInvalidGenre() {
-        when(mpaStorage.findById(1)).thenReturn(Optional.of(new Mpa(1, "G")));
-        when(genreStorage.findById(999)).thenReturn(Optional.empty());
+    void shouldThrowNoSuchElementForInvalidGenre() {
+        when(mpaService.findById(1)).thenReturn(new Mpa(1, "G"));
+        when(genreService.findById(999)).thenThrow(new NoSuchElementException("Genre not found: 999"));
 
         testFilm.setMpa(new Mpa(1, null));
         Set<Genre> genres = new LinkedHashSet<>();
         genres.add(new Genre(999, null));
         testFilm.setGenres(genres);
 
-        NotFoundException ex = assertThrows(NotFoundException.class, () -> filmService.create(testFilm));
-        assertTrue(ex.getMessage().contains("Genre 999"));
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class, () -> filmService.create(testFilm));
+        assertTrue(ex.getMessage().contains("Genre not found: 999"));
     }
 
     @Test
@@ -112,7 +110,7 @@ class FilmServiceTest {
         testFilm.setId(1L);
         testUser.setId(1L);
 
-        when(userStorage.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.findById(1L)).thenReturn(testUser);
 
         filmService.addLike(1L, 1L);
         verify(filmStorage, times(1)).addLike(1L, 1L);
@@ -137,10 +135,10 @@ class FilmServiceTest {
 
     @Test
     void shouldThrowWhenUserNotFoundForLike() {
-        when(userStorage.findById(999L)).thenReturn(Optional.empty());
+        when(userService.findById(999L)).thenThrow(new NoSuchElementException("Пользователь не найден: 999"));
 
-        NotFoundException ex = assertThrows(NotFoundException.class, () -> filmService.addLike(1L, 999L));
-        assertTrue(ex.getMessage().contains("User 999"));
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class, () -> filmService.addLike(1L, 999L));
+        assertTrue(ex.getMessage().contains("Пользователь не найден: 999"));
     }
 
     private Film makeFilm(String name) {
@@ -154,10 +152,6 @@ class FilmServiceTest {
     }
 
     private User makeUser(String email, String login) {
-        User user = new User();
-        user.setEmail(email);
-        user.setLogin(login);
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-        return user;
+        return new User(0L, email, login, login, LocalDate.of(2000, 1, 1));
     }
 }

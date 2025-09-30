@@ -26,86 +26,86 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({FilmDbStorage.class})
 class FilmDbStorageIT {
 
-    private final FilmDbStorage films;
-    private final JdbcTemplate jdbc;
+    private final FilmDbStorage filmDbStorage;
+    private final JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void seedDicts() {
-        jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (1, 'G')");
-        jdbc.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (2, 'PG-13')");
-        jdbc.update("MERGE INTO GENRE (ID, NAME) KEY(ID) VALUES (1, 'Комедия')");
-        jdbc.update("MERGE INTO GENRE (ID, NAME) KEY(ID) VALUES (2, 'Драма')");
+    void seedDictionaries() {
+        jdbcTemplate.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (1, 'G')");
+        jdbcTemplate.update("MERGE INTO MPA (ID, NAME) KEY(ID) VALUES (2, 'PG-13')");
+        jdbcTemplate.update("MERGE INTO GENRE (ID, NAME) KEY(ID) VALUES (1, 'Комедия')");
+        jdbcTemplate.update("MERGE INTO GENRE (ID, NAME) KEY(ID) VALUES (2, 'Драма')");
 
         // Пользователи для лайков (на случай внешних ключей)
-        jdbc.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u1@x','u1','U1', DATE '1990-01-01')");
-        jdbc.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u2@x','u2','U2', DATE '1991-01-01')");
-        jdbc.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u3@x','u3','U3', DATE '1992-01-01')");
+        jdbcTemplate.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u1@x','u1','U1', DATE '1990-01-01')");
+        jdbcTemplate.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u2@x','u2','U2', DATE '1991-01-01')");
+        jdbcTemplate.update("INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES ('u3@x','u3','U3', DATE '1992-01-01')");
     }
 
     @Test
     void create_find_update_and_containsKey() {
-        Film f = new Film();
-        f.setName("Test");
-        f.setDescription("Desc");
-        f.setReleaseDate(LocalDate.of(2001, 1, 1));
-        f.setDuration(100);
-        f.setMpa(new Mpa(1, null));
-        Set<Genre> g = new LinkedHashSet<>();
-        g.add(new Genre(1, null));
-        f.setGenres(g);
+        Film film = new Film();
+        film.setName("Test");
+        film.setDescription("Desc");
+        film.setReleaseDate(LocalDate.of(2001, 1, 1));
+        film.setDuration(100);
+        film.setMpa(new Mpa(1, null));
+        Set<Genre> genres = new LinkedHashSet<>();
+        genres.add(new Genre(1, null));
+        film.setGenres(genres);
 
-        f = films.create(f);
-        assertThat(f.getId()).isPositive();
-        assertThat(films.containsKey(f.getId())).isTrue();
+        film = filmDbStorage.create(film);
+        assertThat(film.getId()).isPositive();
+        assertThat(filmDbStorage.containsKey(film.getId())).isTrue();
 
-        Optional<Film> byId = films.findById(f.getId());
-        assertThat(byId).isPresent();
-        assertThat(byId.get().getMpa().getName()).isEqualTo("G"); // имя подхватилось из БД
-        assertThat(byId.get().getGenres()).extracting(Genre::getId).containsExactly(1);
+        Optional<Film> foundFilm = filmDbStorage.findById(film.getId());
+        assertThat(foundFilm).isPresent();
+        assertThat(foundFilm.get().getMpa().getName()).isEqualTo("G"); // имя подхватилось из БД
+        assertThat(foundFilm.get().getGenres()).extracting(Genre::getId).containsExactly(1);
 
         // обновим жанры и длительность
-        f.setDuration(120);
-        Set<Genre> newGenres = new LinkedHashSet<>();
-        newGenres.add(new Genre(1, null));
-        newGenres.add(new Genre(2, null));
-        f.setGenres(newGenres);
+        film.setDuration(120);
+        Set<Genre> updatedGenres = new LinkedHashSet<>();
+        updatedGenres.add(new Genre(1, null));
+        updatedGenres.add(new Genre(2, null));
+        film.setGenres(updatedGenres);
 
-        Film updated = films.update(f);
-        assertThat(updated.getDuration()).isEqualTo(120);
-        assertThat(updated.getGenres()).extracting(Genre::getId).containsExactly(1, 2);
+        Film updatedFilm = filmDbStorage.update(film);
+        assertThat(updatedFilm.getDuration()).isEqualTo(120);
+        assertThat(updatedFilm.getGenres()).extracting(Genre::getId).containsExactly(1, 2);
     }
 
     @Test
     void findAll_and_popular() {
         // фильм 1
-        Film a = new Film();
-        a.setName("A");
-        a.setDescription("d");
-        a.setReleaseDate(LocalDate.of(2000, 1, 1));
-        a.setDuration(90);
-        a.setMpa(new Mpa(1, null));
-        a.setGenres(new LinkedHashSet<>(List.of(new Genre(1, null))));
-        a = films.create(a);
+        Film filmA = new Film();
+        filmA.setName("A");
+        filmA.setDescription("d");
+        filmA.setReleaseDate(LocalDate.of(2000, 1, 1));
+        filmA.setDuration(90);
+        filmA.setMpa(new Mpa(1, null));
+        filmA.setGenres(new LinkedHashSet<>(List.of(new Genre(1, null))));
+        filmA = filmDbStorage.create(filmA);
 
         // фильм 2
-        Film b = new Film();
-        b.setName("B");
-        b.setDescription("d");
-        b.setReleaseDate(LocalDate.of(2000, 2, 1));
-        b.setDuration(95);
-        b.setMpa(new Mpa(2, null));
-        b.setGenres(new LinkedHashSet<>(List.of(new Genre(2, null))));
-        b = films.create(b);
+        Film filmB = new Film();
+        filmB.setName("B");
+        filmB.setDescription("d");
+        filmB.setReleaseDate(LocalDate.of(2000, 2, 1));
+        filmB.setDuration(95);
+        filmB.setMpa(new Mpa(2, null));
+        filmB.setGenres(new LinkedHashSet<>(List.of(new Genre(2, null))));
+        filmB = filmDbStorage.create(filmB);
 
-        List<Film> all = films.findAll();
-        assertThat(all.size()).isGreaterThanOrEqualTo(2);
+        List<Film> allFilms = filmDbStorage.findAll();
+        assertThat(allFilms.size()).isGreaterThanOrEqualTo(2);
 
-        films.addLike(b.getId(), 1L);
-        films.addLike(b.getId(), 2L);
-        films.addLike(a.getId(), 1L);
+        filmDbStorage.addLike(filmB.getId(), 1L);
+        filmDbStorage.addLike(filmB.getId(), 2L);
+        filmDbStorage.addLike(filmA.getId(), 1L);
 
-        List<Film> top = films.findPopular(10);
-        assertThat(top).isNotEmpty();
-        assertThat(top.get(0).getId()).isEqualTo(b.getId());
+        List<Film> popularFilms = filmDbStorage.findPopular(10);
+        assertThat(popularFilms).isNotEmpty();
+        assertThat(popularFilms.get(0).getId()).isEqualTo(filmB.getId());
     }
 }

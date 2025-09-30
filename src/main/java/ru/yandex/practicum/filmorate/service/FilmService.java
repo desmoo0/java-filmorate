@@ -7,9 +7,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.function.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.function.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.function.MpaStorage;
-import ru.yandex.practicum.filmorate.storage.function.UserStorage;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,14 +18,14 @@ import java.util.stream.Collectors;
 public class FilmService {
 
     private final FilmStorage films;
-    private final GenreStorage genres;
-    private final MpaStorage mpas;
-    private final UserStorage users;
+    private final GenreService genres;
+    private final MpaService mpas;
+    private final UserService users;
 
     public FilmService(FilmStorage films,
-                       GenreStorage genres,
-                       MpaStorage mpas,
-                       UserStorage users) {
+                       GenreService genres,
+                       MpaService mpas,
+                       UserService users) {
         this.films = films;
         this.genres = genres;
         this.mpas = mpas;
@@ -63,12 +60,12 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        users.findById(userId).orElseThrow(() -> new NotFoundException("User " + userId));
+        users.findById(userId);
         films.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        users.findById(userId).orElseThrow(() -> new NotFoundException("User " + userId));
+        users.findById(userId);
         films.removeLike(filmId, userId);
     }
 
@@ -77,19 +74,12 @@ public class FilmService {
     }
 
     private void enrichRefs(Film film) {
-        film.setMpa(mpas.findById(film.getMpa().getId())
-                .orElseThrow(() -> new NotFoundException("MPA " + film.getMpa().getId())));
+        film.setMpa(mpas.findById(film.getMpa().getId()));
 
         Set<Genre> resolvedGenres = film.getGenres().stream()
-                .map(g -> {
-                    Genre found = genres.findById(g.getId())
-                            .orElseThrow(() -> new NotFoundException("Genre " + g.getId()));
-                    if (found.getName() == null || found.getName().trim().isEmpty()) {
-                        throw new NotFoundException("Invalid genre name for id " + g.getId());
-                    }
-                    return found;
-                })
+                .map(g -> genres.findById(g.getId()))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+
         film.setGenres(resolvedGenres);
         log.debug("Enriched film with genres: {}", resolvedGenres);
     }

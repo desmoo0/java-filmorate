@@ -1,19 +1,18 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Data
-@Builder
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Film {
@@ -34,11 +33,8 @@ public class Film {
 
     private Mpa mpa;
 
-    @Valid
-    @Builder.Default
     private Set<Genre> genres = new LinkedHashSet<>();
 
-    @Builder.Default
     private Set<Long> likes = new HashSet<>();
 
     @AssertTrue(message = "Дата выхода не может быть ранее 1895-12-28")
